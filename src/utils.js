@@ -7,6 +7,7 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  Tooltip,
 } from "chart.js";
 
 Chart.register(
@@ -14,7 +15,8 @@ Chart.register(
   CategoryScale,
   LinearScale,
   PointElement,
-  LineElement
+  LineElement,
+  Tooltip
 );
 
 function getStats(array) {
@@ -75,26 +77,32 @@ export async function updateChart() {
           label: `Shiller P/E Ratio`,
           data: ratios,
           borderWidth: 1,
+          backgroundColor: "rgba(20, 10, 220, 0.6)",
         },
         {
           label: `Historic Average`,
           data: averageLine,
+          backgroundColor: "rgba(10, 10, 10, 0.25)",
         },
         {
           label: `1 Standard Deviation above Mean`,
           data: stddevLineAbove,
+          backgroundColor: "rgba(180, 250, 200, 0.1)",
         },
         {
           label: `2 Standard Deviation above Mean`,
           data: stddevLine2Above,
+          backgroundColor: "rgba(200, 10, 10, 0.05)",
         },
         {
           label: `1 Standard Deviation below Mean`,
           data: stddevLineBelow,
+          backgroundColor: "rgba(180, 250, 200, 0.1)",
         },
         {
           label: `2 Standard Deviation below Mean`,
           data: stddevLine2Below,
+          backgroundColor: "rgba(200, 10, 10, 0.05)",
         },
       ],
     },
