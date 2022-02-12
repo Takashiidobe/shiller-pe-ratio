@@ -1,23 +1,9 @@
 import data from "./data.json";
+import standardAndPoorData from "./inflation-adjusted-sp-500.json";
 
-import {
-  Chart,
-  LineController,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-} from "chart.js";
+import { Chart, registerables } from "chart.js";
 
-Chart.register(
-  LineController,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip
-);
+Chart.register(...registerables);
 
 function getStats(array) {
   const n = array.length;
@@ -43,6 +29,12 @@ export async function updateChart() {
   for (const [date, ratio] of dataset) {
     dates.push(date);
     ratios.push(ratio);
+  }
+
+  let sAndPData = [];
+
+  for (const [_, value] of standardAndPoorData.data) {
+    sAndPData.push(value);
   }
 
   document.getElementById("myChart").remove();
@@ -76,8 +68,16 @@ export async function updateChart() {
         {
           label: `Shiller P/E Ratio`,
           data: ratios,
+          yAxisID: "A",
           borderWidth: 1,
           backgroundColor: "rgba(20, 10, 220, 0.6)",
+        },
+        {
+          label: `S&P Prices`,
+          data: sAndPData,
+          yAxisID: "B",
+          borderWidth: 1,
+          backgroundColor: "rgba(220, 10, 20, 0.6)",
         },
         {
           label: `Historic Average`,
@@ -106,6 +106,22 @@ export async function updateChart() {
         },
       ],
     },
+    options: {
+      scales: {
+        A: {
+          type: "linear",
+          position: "left",
+        },
+        B: {
+          type: "linear",
+          position: "right",
+          ticks: {
+            max: 1,
+            min: 0,
+          },
+        },
+      },
+    },
   });
 
   let table = document.createElement("table");
@@ -114,30 +130,46 @@ export async function updateChart() {
   let tr = document.createElement("tr");
   let th1 = document.createElement("th");
   let th2 = document.createElement("th");
+  let th3 = document.createElement("th");
 
   let text1 = document.createTextNode("Date");
   let text2 = document.createTextNode("P/E Ratio");
+  let text3 = document.createTextNode("Inflation Adjusted S&P Price");
 
   th1.appendChild(text1);
   th2.appendChild(text2);
+  th3.appendChild(text3);
   tr.appendChild(th1);
   tr.appendChild(th2);
+  tr.appendChild(th3);
   tableBody.appendChild(tr);
 
-  for (const [date, ratio] of dataset) {
+  let reversedDataset = [...dataset];
+  reversedDataset.reverse();
+  let reversedSAndPData = [...sAndPData];
+  reversedSAndPData.reverse();
+
+  for (let i = 0; i < reversedDataset.length; i++) {
+    let date = reversedDataset[i][0];
+    let ratio = reversedDataset[i][1];
+    let price = reversedSAndPData[i];
     let tr = document.createElement("tr");
     tableBody.appendChild(tr);
 
     let td1 = document.createElement("td");
     let td2 = document.createElement("td");
+    let td3 = document.createElement("td");
 
     let text1 = document.createTextNode(date);
     let text2 = document.createTextNode(ratio);
+    let text3 = document.createTextNode(price);
 
     td1.appendChild(text1);
     td2.appendChild(text2);
+    td3.appendChild(text3);
     tr.appendChild(td1);
     tr.appendChild(td2);
+    tr.appendChild(td3);
   }
   let summary = document.createElement("summary");
   summary.textContent = "Table";
