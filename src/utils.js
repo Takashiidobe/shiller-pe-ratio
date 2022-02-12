@@ -1,5 +1,32 @@
 import data from "./data.json";
-import { Chart } from "chart.js";
+
+import {
+  Chart,
+  LineController,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+} from "chart.js";
+
+Chart.register(
+  LineController,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement
+);
+
+function getStats(array) {
+  const n = array.length;
+  const mean = array.reduce((a, b) => a + b) / n;
+  return [
+    Math.sqrt(
+      array.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n
+    ),
+    mean,
+  ];
+}
 
 export async function updateChart() {
   let data = await fetchData();
@@ -22,6 +49,22 @@ export async function updateChart() {
   document.body.appendChild(canvas);
 
   const ctx = document.getElementById("myChart");
+  let [stddev, average] = getStats(ratios);
+
+  // create a line for the historic average
+  let averageLine = [];
+  let stddevLineAbove = [];
+  let stddevLineBelow = [];
+  let stddevLine2Above = [];
+  let stddevLine2Below = [];
+
+  for (let i = 0; i < ratios.length; i++) {
+    averageLine.push(average);
+    stddevLineAbove.push(average + stddev);
+    stddevLineBelow.push(average - stddev);
+    stddevLine2Above.push(average + stddev + stddev);
+    stddevLine2Below.push(average - stddev - stddev);
+  }
 
   new Chart(ctx, {
     type: "line",
@@ -32,6 +75,26 @@ export async function updateChart() {
           label: `Shiller P/E Ratio`,
           data: ratios,
           borderWidth: 1,
+        },
+        {
+          label: `Historic Average`,
+          data: averageLine,
+        },
+        {
+          label: `1 Standard Deviation above Mean`,
+          data: stddevLineAbove,
+        },
+        {
+          label: `2 Standard Deviation above Mean`,
+          data: stddevLine2Above,
+        },
+        {
+          label: `1 Standard Deviation below Mean`,
+          data: stddevLineBelow,
+        },
+        {
+          label: `2 Standard Deviation below Mean`,
+          data: stddevLine2Below,
         },
       ],
     },

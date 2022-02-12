@@ -18,4 +18,9 @@ module.exports = {
   buildOptions: {
     /* ... */
   },
+  optimize: {
+    minify: true,
+    treeshake: true,
+    target: "es2020",
+  },
 };
