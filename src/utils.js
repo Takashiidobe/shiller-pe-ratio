@@ -33,7 +33,7 @@ export async function updateChart() {
 
   let sAndPData = [];
 
-  for (const [_, value] of standardAndPoorData.data) {
+  for (const [_, value] of standardAndPoorData.data.reverse()) {
     sAndPData.push(value);
   }
 
