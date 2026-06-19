@@ -5,6 +5,8 @@ import { Chart, registerables } from "chart.js";
 
 Chart.register(...registerables);
 
+let chart;
+
 function getStats(array) {
   const n = array.length;
   const mean = array.reduce((a, b) => a + b) / n;
@@ -17,168 +19,192 @@ function getStats(array) {
 }
 
 export async function updateChart() {
-  let data = await fetchData();
+  const dataset = (await fetchData()).data
+    .slice()
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  const pricesByDate = new Map(standardAndPoorData.data);
+  const rows = dataset
+    .map(([date, ratio]) => [date, ratio, pricesByDate.get(date)])
+    .filter((row) => Number.isFinite(row[2]));
+  const dates = rows.map(([date]) => date);
+  const ratios = rows.map(([, ratio]) => ratio);
+  const prices = rows.map(([, , price]) => price);
+  const [stddev, average] = getStats(ratios);
+  const latest = rows.at(-1);
 
-  let dates = [];
-  let ratios = [];
+  renderStats({ latest, average, stddev, count: rows.length });
+  renderTable(rows);
 
-  const dataset = data.data;
-
-  dataset.sort((a, b) => a[0].localeCompare(b[0]));
-
-  for (const [date, ratio] of dataset) {
-    dates.push(date);
-    ratios.push(ratio);
-  }
-
-  let sAndPData = [];
-
-  for (const [_, value] of standardAndPoorData.data.reverse()) {
-    sAndPData.push(value);
-  }
-
-  document.getElementById("myChart").remove();
-  let canvas = document.createElement("canvas");
-  canvas.setAttribute("id", "myChart");
-  document.body.appendChild(canvas);
-
+  const line = (value) => Array.from({ length: ratios.length }, () => value);
   const ctx = document.getElementById("myChart");
-  let [stddev, average] = getStats(ratios);
 
-  // create a line for the historic average
-  let averageLine = [];
-  let stddevLineAbove = [];
-  let stddevLineBelow = [];
-  let stddevLine2Above = [];
-  let stddevLine2Below = [];
-
-  for (let i = 0; i < ratios.length; i++) {
-    averageLine.push(average);
-    stddevLineAbove.push(average + stddev);
-    stddevLineBelow.push(average - stddev);
-    stddevLine2Above.push(average + stddev + stddev);
-    stddevLine2Below.push(average - stddev - stddev);
-  }
-
-  new Chart(ctx, {
+  chart?.destroy();
+  chart = new Chart(ctx, {
     type: "line",
     data: {
       labels: dates,
       datasets: [
         {
-          label: `Shiller P/E Ratio`,
+          label: "Shiller P/E Ratio",
           data: ratios,
-          yAxisID: "A",
+          yAxisID: "ratio",
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.12)",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.18,
+        },
+        {
+          label: "Inflation Adjusted S&P 500",
+          data: prices,
+          yAxisID: "price",
+          borderColor: "#dc2626",
+          backgroundColor: "rgba(220, 38, 38, 0.1)",
           borderWidth: 1,
-          backgroundColor: "rgba(20, 10, 220, 0.6)",
+          pointRadius: 0,
+          tension: 0.18,
         },
         {
-          label: `S&P Prices`,
-          data: sAndPData,
-          yAxisID: "B",
+          label: "Historic Average",
+          data: line(average),
+          borderColor: "#111827",
+          borderDash: [6, 6],
           borderWidth: 1,
-          backgroundColor: "rgba(220, 10, 20, 0.6)",
+          pointRadius: 0,
         },
         {
-          label: `Historic Average`,
-          data: averageLine,
-          backgroundColor: "rgba(10, 10, 10, 0.25)",
+          label: "1 Standard Deviation Above Mean",
+          data: line(average + stddev),
+          borderColor: "#16a34a",
+          borderDash: [4, 6],
+          borderWidth: 1,
+          pointRadius: 0,
         },
         {
-          label: `1 Standard Deviation above Mean`,
-          data: stddevLineAbove,
-          backgroundColor: "rgba(180, 250, 200, 0.1)",
+          label: "2 Standard Deviations Above Mean",
+          data: line(average + stddev * 2),
+          borderColor: "#f97316",
+          borderDash: [4, 6],
+          borderWidth: 1,
+          pointRadius: 0,
         },
         {
-          label: `2 Standard Deviation above Mean`,
-          data: stddevLine2Above,
-          backgroundColor: "rgba(200, 10, 10, 0.05)",
+          label: "1 Standard Deviation Below Mean",
+          data: line(average - stddev),
+          borderColor: "#16a34a",
+          borderDash: [4, 6],
+          borderWidth: 1,
+          pointRadius: 0,
         },
         {
-          label: `1 Standard Deviation below Mean`,
-          data: stddevLineBelow,
-          backgroundColor: "rgba(180, 250, 200, 0.1)",
-        },
-        {
-          label: `2 Standard Deviation below Mean`,
-          data: stddevLine2Below,
-          backgroundColor: "rgba(200, 10, 10, 0.05)",
+          label: "2 Standard Deviations Below Mean",
+          data: line(average - stddev * 2),
+          borderColor: "#f97316",
+          borderDash: [4, 6],
+          borderWidth: 1,
+          pointRadius: 0,
         },
       ],
     },
     options: {
+      maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: "index",
+      },
+      plugins: {
+        legend: {
+          position: "bottom",
+        },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              return `${context.dataset.label}: ${formatNumber(context.parsed.y)}`;
+            },
+          },
+        },
+      },
       scales: {
-        A: {
+        ratio: {
           type: "linear",
           position: "left",
+          title: {
+            display: true,
+            text: "Shiller P/E",
+          },
         },
-        B: {
+        price: {
           type: "linear",
           position: "right",
-          ticks: {
-            max: 1,
-            min: 0,
+          grid: {
+            drawOnChartArea: false,
+          },
+          title: {
+            display: true,
+            text: "Real S&P 500",
           },
         },
       },
     },
   });
+}
 
-  let table = document.createElement("table");
-  var tableBody = document.createElement("tbody");
-  table.appendChild(tableBody);
-  let tr = document.createElement("tr");
-  let th1 = document.createElement("th");
-  let th2 = document.createElement("th");
-  let th3 = document.createElement("th");
+function renderStats({ latest, average, stddev, count }) {
+  const [date, ratio, price] = latest;
 
-  let text1 = document.createTextNode("Date");
-  let text2 = document.createTextNode("P/E Ratio");
-  let text3 = document.createTextNode("Inflation Adjusted S&P Price");
+  document.getElementById("latest-date").textContent = formatDate(date);
+  document.getElementById("latest-ratio").textContent = formatNumber(ratio);
+  document.getElementById("latest-price").textContent = formatCurrency(price);
+  document.getElementById("average-ratio").textContent = formatNumber(average);
+  document.getElementById("stddev-ratio").textContent = formatNumber(stddev);
+  document.getElementById("observation-count").textContent = count.toLocaleString();
+  document.getElementById("source-date").textContent = formatDate(date);
+}
 
-  th1.appendChild(text1);
-  th2.appendChild(text2);
-  th3.appendChild(text3);
-  tr.appendChild(th1);
-  tr.appendChild(th2);
-  tr.appendChild(th3);
-  tableBody.appendChild(tr);
+function renderTable(rows) {
+  const body = document.getElementById("data-table-body");
+  const fragment = document.createDocumentFragment();
 
-  let reversedDataset = [...dataset];
-  reversedDataset.reverse();
-  let reversedSAndPData = [...sAndPData];
-  reversedSAndPData.reverse();
+  body.replaceChildren();
 
-  for (let i = 0; i < reversedDataset.length; i++) {
-    let date = reversedDataset[i][0];
-    let ratio = reversedDataset[i][1];
-    let price = reversedSAndPData[i];
-    let tr = document.createElement("tr");
-    tableBody.appendChild(tr);
+  for (const [date, ratio, price] of rows.slice().reverse()) {
+    const row = document.createElement("tr");
 
-    let td1 = document.createElement("td");
-    let td2 = document.createElement("td");
-    let td3 = document.createElement("td");
+    for (const value of [formatDate(date), formatNumber(ratio), formatCurrency(price)]) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.appendChild(cell);
+    }
 
-    let text1 = document.createTextNode(date);
-    let text2 = document.createTextNode(ratio);
-    let text3 = document.createTextNode(price);
-
-    td1.appendChild(text1);
-    td2.appendChild(text2);
-    td3.appendChild(text3);
-    tr.appendChild(td1);
-    tr.appendChild(td2);
-    tr.appendChild(td3);
+    fragment.appendChild(row);
   }
-  let summary = document.createElement("summary");
-  summary.textContent = "Table";
-  let details = document.createElement("details");
-  details.appendChild(table);
-  details.appendChild(summary);
-  document.body.appendChild(details);
+
+  body.appendChild(fragment);
 }
 
 export async function fetchData() {
   return data;
+}
+
+function formatDate(value) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${value}T00:00:00Z`));
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  }).format(value);
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  }).format(value);
 }

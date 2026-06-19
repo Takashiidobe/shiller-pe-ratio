@@ -1,16 +1,20 @@
 {
-  "name": "market-stats",
+  "name": "shiller-pe-ratio",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
   "license": "MIT",
   "devDependencies": {
-    "snowpack": "^3.8.8"
+    "jsdom": "^29.1.1",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9"
   },
   "scripts": {
-    "start": "snowpack dev",
-    "build": "snowpack build"
+    "start": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "update:data": "node scripts/update-data.js"
   },
   "dependencies": {
-    "chart.js": "^3.7.0"
+    "chart.js": "^4.5.1"
   }
 }
