@@ -1,71 +1,89 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <title>Shiller P/E Ratio</title>
   <meta name="description" content="Shiller P/E Ratio chart and history">
-
   <meta property="og:title" content="Shiller P/E Ratio">
 </head>
-
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <span class="site-name">Market Data</span>
+      <nav aria-label="Page navigation">
+        <a href="#chart">Chart</a>
+        <a href="#historical-data">Data</a>
+        <a href="#notes">Notes</a>
+      </nav>
+    </div>
+  </header>
+
   <main class="shell">
     <section class="hero" aria-labelledby="page-title">
-      <div>
-        <p class="eyebrow">Cyclically adjusted market valuation</p>
-        <h1 id="page-title">Shiller P/E Ratio</h1>
-        <p class="lede">The Shiller P/E Ratio, also known as CAPE or PE 10, compares market prices with average inflation-adjusted earnings from the previous 10 years.</p>
-      </div>
+      <p class="eyebrow">Equities / Market valuation</p>
+      <h1 id="page-title">Shiller P/E Ratio</h1>
+      <p class="lede">The cyclically adjusted price-to-earnings ratio (CAPE) compares market prices with average inflation-adjusted earnings over the previous 10 years.</p>
+    </section>
+
+    <section class="observations" aria-label="Market statistics">
       <div class="latest">
         <span>Latest observation</span>
         <strong id="latest-ratio">--</strong>
         <small id="latest-date">--</small>
       </div>
+      <div class="stats">
+        <article>
+          <span>Real S&amp;P 500</span>
+          <strong id="latest-price">--</strong>
+        </article>
+        <article>
+          <span>Average since 1960</span>
+          <strong id="average-ratio">--</strong>
+        </article>
+        <article>
+          <span>Standard deviation</span>
+          <strong id="stddev-ratio">--</strong>
+        </article>
+        <article>
+          <span>Observations</span>
+          <strong id="observation-count">--</strong>
+        </article>
+      </div>
     </section>
 
-    <section class="stats" aria-label="Market statistics">
-      <article>
-        <span>Inflation Adjusted S&P 500</span>
-        <strong id="latest-price">--</strong>
-      </article>
-      <article>
-        <span>Average Since 1960</span>
-        <strong id="average-ratio">--</strong>
-      </article>
-      <article>
-        <span>Standard Deviation</span>
-        <strong id="stddev-ratio">--</strong>
-      </article>
-      <article>
-        <span>Observations</span>
-        <strong id="observation-count">--</strong>
-      </article>
+    <section id="chart" class="chart-panel" aria-labelledby="chart-title">
+      <div class="chart-heading">
+        <h2 id="chart-title">Historical series</h2>
+        <span>Monthly · Since 1960</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="myChart" role="img" aria-label="Shiller P/E ratio and inflation-adjusted S&P 500 since 1960. Values are available in the historical data table below."></canvas>
+      </div>
     </section>
 
-    <section class="chart-panel" aria-label="Shiller P/E chart">
-      <canvas id="myChart"></canvas>
-    </section>
-
-    <details class="data-panel">
+    <details id="historical-data" class="data-panel">
       <summary>Historical data through <span id="source-date">--</span></summary>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Historical observations">
         <table>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>P/E Ratio</th>
-              <th>Inflation Adjusted S&P 500</th>
+              <th scope="col">Date</th>
+              <th scope="col">P/E Ratio</th>
+              <th scope="col">Inflation Adjusted S&amp;P 500</th>
             </tr>
           </thead>
           <tbody id="data-table-body"></tbody>
         </table>
       </div>
     </details>
-  </main>
 
+    <section id="notes" class="notes" aria-labelledby="notes-title">
+      <h2 id="notes-title">Series notes</h2>
+      <p>Source: <a href="https://www.multpl.com/shiller-pe/table/by-month">Multpl, Shiller P/E</a> and <a href="https://www.multpl.com/inflation-adjusted-s-p-500/table/by-month">inflation-adjusted S&amp;P 500</a>. Statistics use matching observations from 1960 onward.</p>
+      <p>The left axis shows the P/E ratio; the right axis shows the real S&amp;P 500. Dashed lines mark the historical mean and one and two standard deviations. Select a legend entry to show or hide a series.</p>
+    </section>
+  </main>
   <script type="module" src="/main.js"></script>
 </body>
 </html>

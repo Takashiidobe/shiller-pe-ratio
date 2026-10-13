@@ -39,3 +39,9 @@ jobs:
           git add src/data.json src/inflation-adjusted-sp-500.json
           git commit -m "Update market data"
           git push
+
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: npx --yes netlify-cli@latest deploy --dir build --prod --no-build
